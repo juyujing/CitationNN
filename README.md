@@ -1,4 +1,4 @@
-# README: Directed Graph Convolutional Network based Hierarchical Heterogeneous Citation Neural Network
+# Directed Graph Convolutional Network based Hierarchical Heterogeneous Citation Neural Network
 
 ## Overview
 CitationNN is a graph neural network-based recommendation system designed for academic paper recommendations. Unlike traditional recommendation models that primarily use paper similarity, co-authorship, and click-through rates, CitationNN integrates citation networks, author-publication relations, and academic relationships to build a two-layer heterogeneous graph neural network (HGNN). This architecture combines a heterogeneous graph neural network (HGNN) with a stacked directed graph neural network (D-GNN) to improve the recommendation quality for users with low publication counts and in emerging research fields.
