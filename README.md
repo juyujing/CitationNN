@@ -68,9 +68,19 @@ python -u main.py --seed 2021 --dataset citeulike --att_dropout 1 --step 5 \
   - Uses separate convolution filters for `cites` and `cited_by` edges
   - Combines results using learnable parameters and skip connections
 
-## Results and Evaluation
+## Evaluation
 - **Compared against baseline models**, our approach significantly improves recall and precision, especially for users in emerging research fields.
 - Supports **early stopping** to prevent overfitting.
+
+## Results
+# Average Results
+- In the same task, our model is **better than SOTA models** within multiple metrics
+
+| Phase | Epoch        | Training Time (s) | Testing Time (s) | Loss | Recall                           | NDCG                              | Hit Ratio                        | Precision                         |
+|-------|-------------|------------------|----------------|------|---------------------------------|---------------------------------|---------------------------------|---------------------------------|
+| Test  | 155/155/170 | 12.14            | 10.89         | 0.62 | [0.01825129 0.03211132 0.05438279] | [0.01516445 0.02093783 0.02855892] | [0.04485678 0.07728337 0.12928602] | [0.01006425 0.00912749 0.00794452] |
+
+
 
 ## Modifications and Improvements
 This project is based on the original work by ZhuYifan (2022).  
