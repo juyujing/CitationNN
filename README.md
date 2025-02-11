@@ -12,7 +12,7 @@ CitationNN is a graph neural network-based recommendation system designed for ac
 ### Clone the Repository
 ```bash
 # Replace with your actual repository link
-git clone https://github.com/juyujing/citationnn.git
+git clone https://github.com/juyujing/CitationNN.git
 cd CitationNN
 ```
 
