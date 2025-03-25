@@ -70,6 +70,5 @@ def parse_args():
     parser.add_argument("--att_dropout", type=int, default=0, help="use att dropout or not")
     parser.add_argument("--early_stop", type=int, default=5, help="early_stop")
     parser.add_argument('--alpha', type=float, default=1)
+    parser.add_argument("--fast_test", type=bool, default=False, help="High-speed model test function supported by global CUDA acceleration. Experience the feeling of flying.")
     return parser.parse_args()
-
-
