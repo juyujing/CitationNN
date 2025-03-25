@@ -29,7 +29,11 @@ To execute the model, use the following command:
 python -u main.py --seed 2021 --dataset citeulike --att_dropout 1 --step 5 \
 --lr 0.001 --l2 1e-6 --pool sum --load_ii_sort 50 --context_hops 1 \
 --with_sim 1 --with_user 1 --e 0.001 --with_uu_co_author 0 --with_ii_co_author 0 \
---with_uu_co_venue 0 --with_ii_co_venue 0 --gpu_id 0 --gnn CitationNN --batch_size 1024
+--with_uu_co_venue 0 --with_ii_co_venue 0 --gpu_id 0 --gnn CitationNN --batch_size 1024 --alpha 0.8 --fast_test 1
+```
+or
+```bash
+python -u main.py --seed 2021 --context_hops 1 --dataset dblp --lr 0.001 --l2 1e-6  --att_dropout 1 --pool sum --with_sim 0 --with_user 0 --gpu_id 0 --gnn CitationNN --batch_size 1024 --alpha 0.95
 ```
 
 ### Explanation of Arguments
@@ -52,6 +56,8 @@ python -u main.py --seed 2021 --dataset citeulike --att_dropout 1 --step 5 \
 - `--gpu_id 0`: GPU ID (set to -1 for CPU).
 - `--gnn CitationNN`: Specifies the model architecture.
 - `--batch_size 1024`: Batch size for training.
+- `--alpha 0.8`: Hyperparameters for control node aggregation.
+- `--fast_test 1` : Activate fast test function.
 
 
 ## Model Structure
@@ -76,11 +82,24 @@ python -u main.py --seed 2021 --dataset citeulike --att_dropout 1 --step 5 \
 ### Average Results
 - In the same task, our model is **better than SOTA models** within multiple metrics. The following is the average results of three experiments.
 
+
+#### CiteULike
+
 | Phase | Epoch        | Training Time (s) | Testing Time (s) | Loss | Recall                           | NDCG                              | Hit Ratio                        | Precision                         |
 |-------|-------------|------------------|----------------|------|---------------------------------|---------------------------------|---------------------------------|---------------------------------|
 | Test  | 155/155/170 | 12.14            | 10.89         | 0.62 | [0.01825129 0.03211132 0.05438279] | [0.01516445 0.02093783 0.02855892] | [0.04485678 0.07728337 0.12928602] | [0.01006425 0.00912749 0.00794452] |
 
+#### DBLP
+
+| Phase | Training Time (s) | Testing Time (s) | Loss | Recall                           | NDCG                              | Hit Ratio                        | Precision                         |
+|-------|-------------------|------------------|------|----------------------------------|-----------------------------------|----------------------------------|-----------------------------------|
+| Test  | 128.15            | 241.22           | 0.08 | [0.15298944 0.22587824 0.31121094] | [0.12457147 0.15429006 0.18144566] | [0.26150776 0.37649007 0.49956339] | [0.05425459 0.04204725 0.03034261] |   
+
+All the results are average values of three experiment.
+
 ### Comparison
+
+#### CiteULike
 
 | Metric    | SOTA Model(MCAP) | Ours  | Improvement (%) |
 |-----------|------------------|-------|----------------|
@@ -93,6 +112,21 @@ python -u main.py --seed 2021 --dataset citeulike --att_dropout 1 --step 5 \
 | HR@5      | 3.66             | 4.15  | +13.30%        |
 | HR@10     | 6.38             | 6.93  | +8.54%         |
 | HR@20     | 10.63            | 11.62 | +9.27%         |
+
+#### DBLP
+
+| Metric    | SOTA Model(MCAP) | Ours  | Improvement (%)|
+|-----------|------------------|-------|----------------|
+| Recall@5  | 14.17            | 1.81  | +7.9%          |
+| Recall@10 | 21.79            | 2.96  | +3.6%          |
+| Recall@20 | 31.11            | 5.21  | +0.0%          |
+| NDCG@5    | 11.22            | 1.45  | +10.9%         |
+| NDCG@10   | 14.24            | 1.95  | +8.3%          |
+| NDCG@20   | 17.17            | 2.77  | +5.6%          |
+| HR@5      | 25.86            | 4.15  | +1.12%         |
+| HR@10     | 30.43            | 6.93  | +0.6%          |
+| HR@20     | 50.05            | 11.62 | -0.1%          |
+
 
 ## Modifications and Improvements
 This project is based on the original work by ZhuYifan (2022).  
