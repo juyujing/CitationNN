@@ -321,6 +321,12 @@ def load_citation_data(file_path):
             if paper_id not in src_list:
                 src_list.append(paper_id)
                 dst_list.append(paper_id)
+    
+    with open(file_path, 'r') as f:
+        for paper_id, _ in enumerate(f.readlines()):
+            if paper_id not in dst_list:
+                src_list.append(paper_id)
+                dst_list.append(paper_id)
 
     return src_list, dst_list
 
@@ -370,7 +376,3 @@ def load_data(model_args):
 
     print('loading over ...')
     return train_cf, user_dict, n_params, norm_mat, indeg, outdeg, u2u, cite_graph
-
-
-
-
