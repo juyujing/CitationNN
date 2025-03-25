@@ -133,4 +133,5 @@ This project is based on the original work by ZhuYifan (2022).
 Significant modifications and optimizations were made by Yujing Ju (2025), leading to improved performance and accuracy.
 
 ## Contact
-For questions or contributions, open an issue on GitHub or contact **Yujing Ju** at **yj2012@hw.ac.uk**.
+For questions or contributions, open an issue on GitHub or contact **Yujing Ju** at **yj2012@hw.ac.uk**(Before May 2, 2025).
+Yujing Ju will start his Doctor of Philosophy in Medical Science at University of Florida in fall 2025. Please contact him at **yujingju@ufl.edu**(After April 29, 2025).
