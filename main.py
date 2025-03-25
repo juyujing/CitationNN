@@ -12,7 +12,7 @@ from modules.MF import Matrix_Factorization
 from utils.parser import parse_args
 
 from utils.data_loader import load_data
-from utils.evaluate import test
+from utils.evaluate import test, fast_test
 from utils.helper import early_stopping
 import optuna
 import datetime
@@ -74,10 +74,17 @@ def set_seed(seed):
     torch.backends.cudnn.benchmark = False
 
 def main(args, run, train_cf, user_dict, n_params, norm_mat, deg, outdeg, u2u, cite_graph):
-    """define model"""
+    if args.fast_test:
+        print('\nFast Test actived.\n')
 
+    if args.dataset=='dblp':
+        mode = 'user'
+    else:
+        mode = 'item'
+    
+    """define model"""
     if args.gnn == "CitationNN":
-        model = CitationNN(n_params, args, norm_mat, u2u, cite_graph).to(device)
+        model = CitationNN(n_params, args, norm_mat, u2u, cite_graph, mode).to(device)
     elif args.gnn == "MCAP":
         model = MCAP(n_params, args, norm_mat, u2u).to(device)
     elif args.gnn == "LightGCN":
@@ -105,6 +112,14 @@ def main(args, run, train_cf, user_dict, n_params, norm_mat, deg, outdeg, u2u, c
     test_results = {}
     epoch2model = {}
     for epoch in range(args.epoch):
+        
+        if args.dataset=='dblp' and args.gnn=='CitationNN':
+            # 硬編碼
+            if (epoch==50 or epoch==80 or epoch==100 or epoch==120) or (epoch>120 and epoch%30==0):
+                for param_group in optimizer.param_groups:
+                    param_group['lr'] *= 0.5
+                print(f"Learning rate decayed to {optimizer.param_groups[0]['lr']} at epoch {epoch}")
+        
         # shuffle training data
         train_cf_ = train_cf
         index = np.arange(len(train_cf_))
@@ -136,15 +151,19 @@ def main(args, run, train_cf, user_dict, n_params, norm_mat, deg, outdeg, u2u, c
 
         if epoch % args.step == 0:
             """testing"""
-
             train_res = PrettyTable()
             train_res.field_names = ["Phase", "Epoch", "training time(s)", "tesing time(s)", "Loss", "recall", "ndcg",
                                      "hit_ratio", "precision"]
 
             model.eval()
             test_s_t = time()
-            test_ret, user_result, deg_recall, deg_recall_mean = test(model, user_dict, n_params, deg, mode='test')
+            if args.fast_test:
+                print('\nFast Test actived. Please keep your attention on the screen at every second.\n')
+                test_ret, user_result, deg_recall, deg_recall_mean = fast_test(model, user_dict, n_params, deg, mode='test')
+            else:
+                test_ret, user_result, deg_recall, deg_recall_mean = test(model, user_dict, n_params, deg, mode='test')
             test_e_t = time()
+
             train_res.add_row(
                 ["Test", epoch, round(train_e_t - train_s_t, 2), round(test_e_t - test_s_t, 2), round(loss.item(), 2),
                  test_ret['recall'],
@@ -161,7 +180,10 @@ def main(args, run, train_cf, user_dict, n_params, norm_mat, deg, outdeg, u2u, c
                 valid_ret = test_ret
             else:
                 test_s_t = time()
-                valid_ret, user_result, deg_recall, deg_recall_mean = test(model, user_dict, n_params, deg, mode='valid')
+                if args.fast_test:
+                    valid_ret, user_result, deg_recall, deg_recall_mean = fast_test(model, user_dict, n_params, deg, mode='valid')
+                else:
+                    valid_ret, user_result, deg_recall, deg_recall_mean = test(model, user_dict, n_params, deg, mode='valid')
                 test_e_t = time()
                 train_res.add_row(
                     ["Valid", epoch, round(train_e_t - train_s_t, 2), round(test_e_t - test_s_t, 2), round(loss.item(), 2),
@@ -232,4 +254,3 @@ if __name__ == '__main__':
     print("time of end: ", e)
     print("finished all")
     
-
