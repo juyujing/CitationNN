@@ -7,13 +7,16 @@ import dgl
 import dgl.nn as dglnn
 
 class DirGCN(nn.Module):
-    def __init__(self, in_dim, hidden_dim, graph):
+    def __init__(self, in_dim, hidden_dim, graph, alpha):
         super(DirGCN, self).__init__()
         self.cites_conv = dglnn.GraphConv(in_dim, hidden_dim, norm='right')  # 改变归一化方式
         self.cited_by_conv = dglnn.GraphConv(in_dim, hidden_dim, norm='left')
         self.fc = nn.Linear(2 * hidden_dim, in_dim)
         self.graph = graph
-        self.alpha = 0.8
+        self.alpha = alpha
+        print('\n\n\nself.alpha:')
+        print(self.alpha)
+        print('\n\n\n')
     
     def forward(self, h):
         # 计算正向信息传递（论文 A 引用 B）
@@ -129,15 +132,18 @@ class GraphConv(nn.Module):
 
 
 class CitationNN(nn.Module):
-    def __init__(self, data_config, args_config, adj_mat, u2u, cite_graph):
+    def __init__(self, data_config, args_config, adj_mat, u2u, cite_graph, mode='item'):
         super(CitationNN, self).__init__()
         
         self.args_config = args_config
         self.set_seed()
         self.n_users = data_config['n_users']
         self.n_items = data_config['n_items']
+        self.mode = mode
+        self.alpha = args_config.alpha
         self.adj_mat = adj_mat
         self.cite_graph = cite_graph
+        self.alpha = args_config.alpha
         self.decay = args_config.l2
         self.emb_size = args_config.dim
         self.dir_hidden_dim = 384
@@ -181,7 +187,8 @@ class CitationNN(nn.Module):
     def _init_layer_2(self):
         return DirGCN(in_dim=self.emb_size,
                       hidden_dim=self.dir_hidden_dim,
-                      graph = self.cite_graph)
+                      graph = self.cite_graph,
+                      alpha=self.alpha)
 
     def set_seed(self):
         seed = self.args_config.seed
@@ -212,24 +219,36 @@ class CitationNN(nn.Module):
                                               mess_dropout=self.mess_dropout)
         
         # Layer 2: DirGCN
-        dir_item_gcn_emb = self.dirgcn(item_gcn_emb)
-
-        neg_item = torch.LongTensor([each[0] for each in neg_item]).to(self.device)
-
-        return self.create_bpr_loss(user_gcn_emb[user], dir_item_gcn_emb[pos_item], dir_item_gcn_emb[neg_item],
+        if self.mode == 'user':
+            dir_user_gcn_emb = self.dirgcn(user_gcn_emb)
+            neg_item = torch.LongTensor([each[0] for each in neg_item]).to(self.device)
+            return self.create_bpr_loss(dir_user_gcn_emb[user], item_gcn_emb[pos_item], item_gcn_emb[neg_item],
                                     self.user_embed[user], self.item_embed[pos_item], self.item_embed[neg_item])
+        else:
+            dir_item_gcn_emb = self.dirgcn(item_gcn_emb)
+            neg_item = torch.LongTensor([each[0] for each in neg_item]).to(self.device)
+            return self.create_bpr_loss(user_gcn_emb[user], dir_item_gcn_emb[pos_item], dir_item_gcn_emb[neg_item],
+                                        self.user_embed[user], self.item_embed[pos_item], self.item_embed[neg_item])
         
+
     def generate(self, split=True):
         user_gcn_emb, item_gcn_emb = self.gcn(self.user_embed,
                                               self.item_embed,
                                               batch = None,
                                               edge_dropout=False,
                                               mess_dropout=False)
-        dir_item_gcn_emb = self.dirgcn(item_gcn_emb)
-        if split:
-            return user_gcn_emb, dir_item_gcn_emb
+        if self.mode == 'user':
+            dir_user_gcn_emb = self.dirgcn(user_gcn_emb)
+            if split:
+                return dir_user_gcn_emb, item_gcn_emb
+            else:
+                return torch.cat([dir_user_gcn_emb, item_gcn_emb], dim=0)
         else:
-            return torch.cat([user_gcn_emb, dir_item_gcn_emb], dim=0)
+            dir_item_gcn_emb = self.dirgcn(item_gcn_emb)
+            if split:
+                return user_gcn_emb, dir_item_gcn_emb
+            else:
+                return torch.cat([user_gcn_emb, dir_item_gcn_emb], dim=0)
 
     def rating(self, u_g_embeddings=None, i_g_embeddings=None):
         return torch.matmul(u_g_embeddings, i_g_embeddings.t())
@@ -247,4 +266,3 @@ class CitationNN(nn.Module):
         emb_loss = self.decay * regularize / batch_size
 
         return mf_loss + emb_loss, mf_loss, emb_loss
-
