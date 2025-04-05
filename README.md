@@ -129,7 +129,7 @@ All the results are average values of three experiment.
 
 
 ## Modifications and Improvements
-This project is based on the original work by DAN ZHANG (2025).  
+This project is based on the original work by DAN ZHANG (2024).  
 Significant modifications and optimizations were made by Yujing Ju (2025), leading to improved performance and accuracy.
 
 ## Contact
