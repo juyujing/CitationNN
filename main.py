@@ -16,7 +16,7 @@ from utils.evaluate import test, fast_test
 from utils.helper import early_stopping
 import optuna
 import datetime
-from modules.CitationNN import CitationNN
+from modules.AsyG-Attention import AsyG
 from modules.MCAP import MCAP
 from modules.LightGCN import LightGCN
 from modules.ApeGNN_APPNP import APPNP
@@ -83,8 +83,8 @@ def main(args, run, train_cf, user_dict, n_params, norm_mat, deg, outdeg, u2u, c
         mode = 'item'
     
     """define model"""
-    if args.gnn == "CitationNN":
-        model = CitationNN(n_params, args, norm_mat, u2u, cite_graph, mode).to(device)
+    if args.gnn == "AsyG":
+        model = AsyG(n_params, args, norm_mat, u2u, cite_graph, mode).to(device)
     elif args.gnn == "MCAP":
         model = MCAP(n_params, args, norm_mat, u2u).to(device)
     elif args.gnn == "LightGCN":
